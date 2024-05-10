@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -9,17 +10,33 @@ import (
 
 type Dictionary map[string]string
 
-// type RecipeSpecs struct {
-// 	difficulty, prepTime, cookTime, totalTime, servings string
-// }
+type RecipeSpecs struct {
+	difficulty, prepTime, cookTime, totalTime, servings string
+}
 
 type Recipe struct {
-	url, name      string
-	ingredients    []string
+	url, name   string
+	ingredients []string
 	// specifications RecipeSpecs
 }
 
+type Configuration struct {
+	BaseUrl string
+}
+
 func main() {
+	/// READ CONFIGURATION ++++++++++++++++++++++++++++++
+	file, _ := os.Open("config.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	configuration := Configuration{}
+	err := decoder.Decode(&configuration)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println(configuration.BaseUrl)
+	/// READ CONFIGURATION END --------------------------
+
 	args := os.Args[1:]
 	url := args[0]
 	collector := colly.NewCollector()
@@ -53,10 +70,9 @@ func main() {
 		recipes = append(recipes, recipe)
 	})
 
-	err := collector.Visit(url)
+	err = collector.Visit(url)
 
 	if err != nil {
 		fmt.Println("Collector Error", err)
 	}
-
 }
